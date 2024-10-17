@@ -41,7 +41,8 @@ jobs:
       - name: 🔧 设置编译配置
         run: |
           cd lede
-          make menuconfig  # 这里您可以根据需要修改配置
+          # make menuconfig  # 这里您可以根据需要修改配置
+          make defconfig  # 生成默认的 .config 文件
 
       - name: 📦 下载 dl 库
         run: |

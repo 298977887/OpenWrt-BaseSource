@@ -1,0 +1,41 @@
+name: Build OpenWrt Base Source
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  schedule:
+    - cron: '0 0 * * *'  # 每天自动触发一次
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v3
+
+      - name: 设置编译环境
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc wget unzip python3
+
+      - name: 更新feeds
+        run: |
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      - name: 默认编译配置
+        run: |
+          make defconfig
+
+      - name: 开始编译
+        run: |
+          make -j$(nproc)
+
+      - name: 保存固件输出
+        uses: actions/upload-artifact@v3
+        with:
+          name: OpenWrt-Base-Firmware
+          path: bin/targets

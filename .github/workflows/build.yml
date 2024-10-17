@@ -1,4 +1,4 @@
-name: Build OpenWrt Base Source
+name: 🏗️ Build OpenWrt Base Source
 
 # 触发条件：push, pull_request, 定时（每天）和手动触发（workflow_dispatch）
 on:
@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 设置编译环境和依赖
+      - name: 🛠️ 设置编译环境和依赖
         run: |
           sudo apt update -y
           sudo apt full-upgrade -y
@@ -27,33 +27,33 @@ jobs:
           python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion swig texinfo \
           uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
 
-      - name: 克隆 LEDE 源码
+      - name: 📥 克隆 LEDE 源码
         run: |
           git clone https://github.com/coolsnowwolf/lede
           cd lede
 
-      - name: 更新 feeds 并安装
+      - name: 🔄 更新 feeds 并安装
         run: |
           cd lede
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      - name: 设置编译配置
+      - name: 🔧 设置编译配置
         run: |
           cd lede
           make menuconfig  # 这里您可以根据需要修改配置
 
-      - name: 下载 dl 库
+      - name: 📦 下载 dl 库
         run: |
           cd lede
           make download -j8
 
-      - name: 编译固件
+      - name: ⚙️ 编译固件
         run: |
           cd lede
-          make V=s -j1  # 官方建议第一次编译使用单线程
+          make V=s -j$(nproc) #使用所有 CPU 编译
 
-      - name: 保存固件输出
+      - name: 📤 保存固件输出
         uses: actions/upload-artifact@v3
         with:
           name: OpenWrt-Base-Firmware

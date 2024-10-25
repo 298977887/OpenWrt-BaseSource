@@ -2,7 +2,7 @@ name: 🏗️ Build OpenWrt Base Source
 
 # 触发条件：push, pull_request, 定时（每天）和手动触发（workflow_dispatch）
 on:
-  #push:
+  push:
   #  branches:
   #    - main # 只有在 main 分支 push 时触发
   #pull_request: # PR 时触发
@@ -19,9 +19,6 @@ jobs:
       image: 298977887/openwrt-builder:latest
 
     steps:
-      - name: 📥 检出代码
-        uses: actions/checkout@v3
-
       - name: 🔢 生成版本号
         id: version
         run: |
@@ -53,7 +50,7 @@ jobs:
       - name: ⚙️ 编译固件
         run: |
           cd lede
-          make V=99 -j$(nproc) #使用所有 CPU 编译
+          make V=s -j$(nproc) #使用所有 CPU 编译
 
       - name: 创建 GitHub Release
         id: create_release

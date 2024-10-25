@@ -30,10 +30,14 @@ jobs:
           git clone https://github.com/coolsnowwolf/lede
           cd lede
 
-      - name: 🔄 更新 feeds 并安装
+      - name: 🔄 更新 feeds
         run: |
           cd lede
           ./scripts/feeds update -a
+
+      - name: 🔄 安装 feeds
+        run: |
+          cd lede
           ./scripts/feeds install -a
 
       - name: 🔧 设置编译配置
@@ -52,7 +56,7 @@ jobs:
           cd lede
           make V=s -j$(nproc) #使用所有 CPU 编译
 
-      - name: 创建 GitHub Release
+      - name: 🚀 创建 GitHub Release
         id: create_release
         uses: actions/create-release@v1
         with:

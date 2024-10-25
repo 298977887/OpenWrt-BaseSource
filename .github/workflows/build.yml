@@ -14,19 +14,20 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    steps:
-      - name: 🛠️ 设置编译环境和依赖
-        run: |
-          sudo apt update -y
-          sudo apt full-upgrade -y
-          sudo apt install -y ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential \
-          bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib \
-          git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev \
-          libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev libreadline-dev \
-          libssl-dev libtool lrzsz mkisofs msmtp ninja-build p7zip p7zip-full patch pkgconf python3 \
-          python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion swig texinfo \
-          uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
+    # 使用自定义 Docker 镜像
+    container:
+      image: 298977887/openwrt-builder:latest
 
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v3
+
+      - name: 🔢 生成版本号
+        id: version
+        run: |
+          VERSION_TAG="v$(date +'%Y%m%d-%H%M')"
+          echo "VERSION_TAG=${VERSION_TAG}" >> $GITHUB_ENV
+      
       - name: 📥 克隆 LEDE 源码
         run: |
           git clone https://github.com/coolsnowwolf/lede
@@ -54,8 +55,21 @@ jobs:
           cd lede
           make V=s -j$(nproc) #使用所有 CPU 编译
 
-      - name: 📤 保存固件输出
-        uses: actions/upload-artifact@v3
+      - name: 创建 GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
         with:
-          name: OpenWrt-Base-Firmware
-          path: lede/bin/targets
+          #tag_name: "v1.0.0"  # 根据实际情况设置版本
+          tag_name: "${{ env.VERSION_TAG }}"  # 使用自动生成的版本号
+          #release_name: "OpenWrt Firmware Release"
+          release_name: "OpenWrt Firmware Release ${{ env.VERSION_TAG }}"
+          draft: false
+          prerelease: false
+
+      - name: 📤 上传 .vmdk 文件到 GitHub Releases
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: lede/bin/targets/*/*/*.vmdk  # 匹配所有 .vmdk 文件
+          asset_name: "openwrt_firmware_${{ env.VERSION_TAG }}.vmdk"  # 使用版本号命名文件
+          asset_content_type: application/octet-stream

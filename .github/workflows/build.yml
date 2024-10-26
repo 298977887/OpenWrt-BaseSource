@@ -19,6 +19,8 @@ jobs:
     #  image: 298977887/openwrt-builder:latest
 
     steps:
+      - name: 🛒 检出代码 - 获取最新的代码库状态
+        uses: actions/checkout@v3
       - name: 🔢 生成版本号
         id: version
         run: |

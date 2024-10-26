@@ -50,6 +50,11 @@ jobs:
         run: |
           cd lede
           make download -j8
+          #延迟 10 秒，等待下载完成
+          make download -j8
+          #延迟 10 秒，等待下载完成
+          make download -j8
+          #延迟 10 秒，等待下载完成
 
       - name: ⚙️ 编译固件
         run: |

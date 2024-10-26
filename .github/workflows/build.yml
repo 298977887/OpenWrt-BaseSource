@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-latest
 
     # 使用自定义 Docker 镜像
-    container:
-      image: 298977887/openwrt-builder:latest
+    #container:
+    #  image: 298977887/openwrt-builder:latest
 
     steps:
       - name: 🔢 生成版本号
@@ -25,10 +25,50 @@ jobs:
           VERSION_TAG="v$(date +'%Y%m%d-%H%M')"
           echo "VERSION_TAG=${VERSION_TAG}" >> $GITHUB_ENV
       
+      - name: Init Env
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          sudo timedatectl set-timezone "Asia/Shanghai"
+
+          sudo apt update
+          sudo apt full-upgrade -y
+          sudo apt install -y ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential \
+          bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib \
+          git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev \
+          libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev libreadline-dev \
+          libssl-dev libtool lrzsz mkisofs msmtp ninja-build p7zip p7zip-full patch pkgconf npm python3 \
+          python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion swig texinfo \
+          uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
+          
+          # sudo apt install --reinstall libc6
+          sudo systemctl daemon-reload
+          sudo apt -y autoremove --purge
+          sudo apt -y clean
+
+          git clone --depth=1 https://github.com/openwrt-dev/po2lmo
+          pushd po2lmo
+          make && sudo make install
+          popd
+
+          df -h
+
       - name: 📥 克隆 LEDE 源码
         run: |
           git clone https://github.com/coolsnowwolf/lede
+          #cd lede
+
+      #添加源
+      - name: 📦 添加源
+        run: |
           cd lede
+          echo "当前目录：" && pwd
+          echo "当前用户为：" && whoami
+          echo 'src-git istore https://github.com/linkease/istore;main' >> feeds.conf.default
+          #echo 'src-git kenzo https://github.com/kenzok8/openwrt-packages' >> feeds.conf.default
+          #echo 'src-git small https://github.com/kenzok8/small' >> feeds.conf.default
 
       - name: 🔄 更新 feeds
         run: |
@@ -39,6 +79,13 @@ jobs:
         run: |
           cd lede
           ./scripts/feeds install -a
+
+      - name: 📑 拷贝.config文件 - 确认配置文件状态
+        run: |
+          echo "📂当前目录：" && pwd
+          ls -la  #la表示显示所有文件，包括隐藏文件
+          # 重命名当前目录下的配置文件并拷贝到 lede 目录下
+          cp "lede;RUI;x86_64.config" lede/.config    
 
       - name: 🔧 设置编译配置
         run: |
@@ -51,10 +98,13 @@ jobs:
           cd lede
           make download -j8
           #延迟 10 秒，等待下载完成
+          sleep 10
           make download -j8
           #延迟 10 秒，等待下载完成
-          make download -j8
+          sleep 10
+           make download -j8
           #延迟 10 秒，等待下载完成
+          sleep 10
 
       - name: ⚙️ 编译固件
         run: |
